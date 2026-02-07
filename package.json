@@ -1,10 +1,35 @@
 {
-  "name": "blender-viewer",
+  "name": "body-anatomy-3d-viewer",
   "version": "1.0.0",
-  "description": "Minimalistic Three.js GLB viewer",
+  "description": "Interactive 3D anatomy viewer for exploring anatomical models with click-through layered visualization and smooth animations",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
+  },
+  "keywords": [
+    "threejs",
+    "3d",
+    "anatomy",
+    "viewer",
+    "glb",
+    "gltf",
+    "webgl",
+    "interactive",
+    "medical",
+    "biology"
+  ],
+  "author": "hpfrei",
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hpfrei/body-anatomy-3d-viewer.git"
+  },
+  "homepage": "https://www.hpfreilabs.com",
+  "bugs": {
+    "url": "https://github.com/hpfrei/body-anatomy-3d-viewer/issues"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   },
   "dependencies": {
     "express": "^4.18.2"

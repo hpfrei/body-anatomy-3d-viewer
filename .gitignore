@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Logs
+npm-debug.log
+*.log
+
+# Environment variables
+.env
+
+# IDE files
+.vscode/
+.idea/
+.DS_Store
+
+# Claude AI files
+.claude/
+
+# Optional: Uncomment if you want to exclude lock file
+# package-lock.json
