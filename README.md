@@ -147,9 +147,20 @@ Edit `public/viewer.js` to customize:
 - Loading time depends on network speed and device performance
 - For larger models, consider additional compression or lazy loading strategies
 
+## Attribution
+
+This project uses anatomical models and data from **[Z-Anatomy](https://www.z-anatomy.com/)**, which is licensed under the [Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0)](http://creativecommons.org/licenses/by-sa/4.0/).
+
+In compliance with the CC BY-SA 4.0 license:
+- **Attribution**: Content derived from Z-Anatomy
+- **Source**: https://www.z-anatomy.com/
+- **License**: CC BY-SA 4.0 (http://creativecommons.org/licenses/by-sa/4.0/)
+
 ## License
 
-This project is licensed under the BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0) - see the [LICENSE](LICENSE) file for details.
+
+This license applies to both the code and the anatomical models used in this project, in compliance with the Z-Anatomy source material's licensing requirements.
 
 ## Contributing
 

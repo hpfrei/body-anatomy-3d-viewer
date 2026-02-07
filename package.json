@@ -19,7 +19,7 @@
     "biology"
   ],
   "author": "hpfrei",
-  "license": "BSD-3-Clause",
+  "license": "CC-BY-SA-4.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hpfrei/body-anatomy-3d-viewer.git"

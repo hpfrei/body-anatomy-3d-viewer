@@ -20,7 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reset functionality to restore all objects to original state
 - Express.js server for static file serving on port 3000
 - Comprehensive documentation (README, CONTRIBUTING, CHANGELOG)
-- BSD-3-Clause license
+- CC BY-SA 4.0 license (Creative Commons Attribution-ShareAlike 4.0)
+- Attribution to Z-Anatomy for anatomical models and data
 - Complete project structure with organized directories
 - Responsive UI elements (info panel, reset button, close button)
 - WebGL hardware-accelerated rendering
