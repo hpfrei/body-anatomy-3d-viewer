@@ -3,7 +3,6 @@
 An interactive 3D anatomy viewer built with Three.js that allows users to explore anatomical models through click-through layered visualization with smooth animations and visual feedback.
 
 ![Body Anatomy 3D Viewer](screenshot.png)
-*Add a screenshot of your viewer here*
 
 ## Features
 
