@@ -1,0 +1,12 @@
+{
+  "name": "blender-viewer",
+  "version": "1.0.0",
+  "description": "Minimalistic Three.js GLB viewer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Model Viewer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="info-panel" class="info-panel hidden">
+        <button id="close-btn" class="close-btn">&times;</button>
+        <h3 id="info-title">Object Info</h3>
+        <p id="info-description"></p>
+    </div>
+
+    <button id="reset-btn" class="reset-btn">Reset All</button>
+
+    <div id="canvas-container"></div>
+
+    <script src="./libs/tween.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "./libs/three.module.js",
+            "three/addons/": "./libs/"
+        }
+    }
+    </script>
+    <script type="module" src="viewer.js"></script>
+</body>
+</html>
