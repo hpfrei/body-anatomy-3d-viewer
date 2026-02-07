@@ -17,7 +17,7 @@ An interactive 3D anatomy viewer built with Three.js that allows users to explor
 
 ## Demo
 
-Visit the live demo at: [https://www.hpfreilabs.com](https://www.hpfreilabs.com)
+Visit the live demo at: [https://www.hpfreilabs.com/body-anatomy-3d-viewer/](https://www.hpfreilabs.com/body-anatomy-3d-viewer/)
 
 ## Installation
 
