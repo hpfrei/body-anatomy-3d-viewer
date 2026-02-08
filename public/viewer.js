@@ -10,8 +10,8 @@ let highlightedObject = null;
 let movedObjects = new Map(); // uuid -> { object, material, position, underneathUUIDs: [] }
 let originalPositions = new Map(); // uuid -> original position
 let visibleTypes = new Set(['muscle', 'bone']); // Currently visible types
-const MOVE_DISTANCE = 0.3;
-const HIDE_OFFSET = -5; // Move objects down when hidden
+const PILE_Y = -3; // Floor level for piles
+const PILE_SPREAD = 1.5; // Random spread in pile
 
 function init() {
     scene = new THREE.Scene();
@@ -155,6 +155,23 @@ function unhighlightObject(object) {
     }
 }
 
+function getPilePosition(type) {
+    const xOffset = type === 'muscle' ? -2.5 : 2.5;
+    return {
+        x: xOffset + (Math.random() - 0.5) * PILE_SPREAD,
+        y: PILE_Y + Math.random() * 0.3,
+        z: (Math.random() - 0.5) * PILE_SPREAD
+    };
+}
+
+function moveToPile(object, duration = 800) {
+    const pile = getPilePosition(object.userData?.type);
+    new TWEEN.Tween(object.position)
+        .to(pile, duration)
+        .easing(TWEEN.Easing.Cubic.Out)
+        .start();
+}
+
 function moveObjectAway(object) {
     if (!object.userData.originalMaterial) return;
 
@@ -167,12 +184,6 @@ function moveObjectAway(object) {
         underneathUUIDs: underneathUUIDs
     });
 
-    const box = new THREE.Box3().setFromObject(object);
-    const center = new THREE.Vector3();
-    box.getCenter(center);
-    const direction = center.normalize();
-    const targetPos = object.position.clone().add(direction.multiplyScalar(MOVE_DISTANCE));
-
     object.material = object.material.clone();
     object.material.transparent = true;
     object.material.opacity = 0.3;
@@ -180,10 +191,7 @@ function moveObjectAway(object) {
     object.material.emissive = new THREE.Color(0x000000);
     object.material.depthWrite = false;
 
-    new TWEEN.Tween(object.position)
-        .to({ x: targetPos.x, y: targetPos.y, z: targetPos.z }, 800)
-        .easing(TWEEN.Easing.Cubic.Out)
-        .start();
+    moveToPile(object);
 
     delete object.userData.originalMaterial;
     highlightedObject = null;
@@ -280,13 +288,7 @@ function toggleType(type) {
 function hideObjectsOfType(type) {
     clickableObjects.forEach(obj => {
         if (obj.userData?.type === type) {
-            const originalPos = originalPositions.get(obj.uuid);
-            if (originalPos) {
-                new TWEEN.Tween(obj.position)
-                    .to({ x: originalPos.x, y: originalPos.y + HIDE_OFFSET, z: originalPos.z }, 800)
-                    .easing(TWEEN.Easing.Cubic.Out)
-                    .start();
-            }
+            moveToPile(obj);
         }
     });
 }
@@ -317,15 +319,19 @@ function resetAllObjects() {
     movedObjects.forEach((state) => {
         const originalPos = originalPositions.get(state.object.uuid);
         const isVisible = visibleTypes.has(state.object.userData?.type);
-        const targetY = isVisible ? originalPos.y : originalPos.y + HIDE_OFFSET;
 
-        new TWEEN.Tween(state.object.position)
-            .to({ x: originalPos.x, y: targetY, z: originalPos.z }, 800)
-            .easing(TWEEN.Easing.Cubic.Out)
-            .onComplete(() => {
-                state.object.material = state.material;
-            })
-            .start();
+        if (isVisible) {
+            new TWEEN.Tween(state.object.position)
+                .to({ x: originalPos.x, y: originalPos.y, z: originalPos.z }, 800)
+                .easing(TWEEN.Easing.Cubic.Out)
+                .onComplete(() => {
+                    state.object.material = state.material;
+                })
+                .start();
+        } else {
+            moveToPile(state.object);
+            state.object.material = state.material;
+        }
     });
 
     setTimeout(() => movedObjects.clear(), 850);
