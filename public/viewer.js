@@ -10,8 +10,8 @@ let highlightedObject = null;
 let movedObjects = new Map(); // uuid -> { object, material, position, underneathUUIDs: [] }
 let originalPositions = new Map(); // uuid -> original position
 let visibleTypes = new Set(['muscle', 'bone']); // Currently visible types
-const PILE_Y = -0.8; // Near feet level for piles
-const PILE_SPREAD = 1.2; // Random spread in pile
+const PILE_Y = -1.0; // Near feet level for piles
+const PILE_SPREAD = 0.6; // Random spread in pile
 
 function init() {
     scene = new THREE.Scene();
@@ -156,10 +156,10 @@ function unhighlightObject(object) {
 }
 
 function getPilePosition(type) {
-    const xOffset = type === 'muscle' ? -1.8 : 1.8;
+    const xOffset = type === 'muscle' ? -0.2 : 0.2;
     return {
         x: xOffset + (Math.random() - 0.5) * PILE_SPREAD,
-        y: PILE_Y + Math.random() * 0.2,
+        y: PILE_Y + Math.random() * 0.05,  // Minimal Y variation for flatter pile
         z: (Math.random() - 0.5) * PILE_SPREAD
     };
 }
