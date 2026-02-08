@@ -4,7 +4,8 @@
   "description": "Interactive 3D anatomy viewer for exploring anatomical models with click-through layered visualization and smooth animations",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "cd public && python3 -m http.server 8080"
   },
   "keywords": [
     "threejs",
