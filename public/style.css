@@ -114,28 +114,45 @@ canvas {
     transform: translateX(2px);
 }
 
-.reset-btn {
+.controls {
     position: absolute;
     bottom: 20px;
     left: 20px;
-    background: rgba(255, 0, 0, 0.8);
+    display: flex;
+    gap: 8px;
+}
+
+.control-btn {
+    background: rgba(0, 0, 0, 0.8);
     color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 10px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    transition: background 0.2s, transform 0.1s;
+    transition: all 0.2s;
     backdrop-filter: blur(10px);
 }
 
-.reset-btn:hover {
-    background: rgba(255, 0, 0, 1);
-    transform: translateY(-2px);
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
-.reset-btn:active {
-    transform: translateY(0);
+#reset-btn {
+    background: rgba(255, 0, 0, 0.8);
+    border-color: rgba(255, 0, 0, 0.5);
+}
+
+#reset-btn:hover {
+    background: rgba(255, 0, 0, 1);
+}
+
+.toggle-btn.active {
+    background: rgba(102, 179, 255, 0.8);
+    border-color: rgba(102, 179, 255, 0.5);
+}
+
+.toggle-btn.active:hover {
+    background: rgba(102, 179, 255, 1);
 }

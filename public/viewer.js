@@ -8,7 +8,10 @@ let raycaster, mouse;
 let clickableObjects = [];
 let highlightedObject = null;
 let movedObjects = new Map(); // uuid -> { object, material, position, underneathUUIDs: [] }
+let originalPositions = new Map(); // uuid -> original position
+let visibleTypes = new Set(['muscle', 'bone']); // Currently visible types
 const MOVE_DISTANCE = 0.3;
+const HIDE_OFFSET = -5; // Move objects down when hidden
 
 function init() {
     scene = new THREE.Scene();
@@ -49,6 +52,8 @@ function init() {
     renderer.domElement.addEventListener('click', onMouseClick);
     document.getElementById('close-btn').addEventListener('click', closeInfoPanel);
     document.getElementById('reset-btn').addEventListener('click', resetAllObjects);
+    document.getElementById('toggle-muscles').addEventListener('click', () => toggleType('muscle'));
+    document.getElementById('toggle-bones').addEventListener('click', () => toggleType('bone'));
 
     animate();
 }
@@ -80,6 +85,7 @@ function loadModel() {
             model.traverse((child) => {
                 if (child.isMesh) {
                     clickableObjects.push(child);
+                    originalPositions.set(child.uuid, child.position.clone());
                 }
             });
 
@@ -257,6 +263,51 @@ function closeInfoPanel() {
     document.getElementById('info-panel').classList.add('hidden');
 }
 
+function toggleType(type) {
+    const btn = document.getElementById(`toggle-${type}s`);
+
+    if (visibleTypes.has(type)) {
+        visibleTypes.delete(type);
+        btn.classList.remove('active');
+        hideObjectsOfType(type);
+    } else {
+        visibleTypes.add(type);
+        btn.classList.add('active');
+        showObjectsOfType(type);
+    }
+}
+
+function hideObjectsOfType(type) {
+    clickableObjects.forEach(obj => {
+        if (obj.userData?.type === type) {
+            const originalPos = originalPositions.get(obj.uuid);
+            if (originalPos) {
+                new TWEEN.Tween(obj.position)
+                    .to({ x: originalPos.x, y: originalPos.y + HIDE_OFFSET, z: originalPos.z }, 800)
+                    .easing(TWEEN.Easing.Cubic.Out)
+                    .start();
+            }
+        }
+    });
+}
+
+function showObjectsOfType(type) {
+    clickableObjects.forEach(obj => {
+        if (obj.userData?.type === type) {
+            const originalPos = originalPositions.get(obj.uuid);
+            if (originalPos) {
+                const movedState = movedObjects.get(obj.uuid);
+                const targetPos = movedState ? movedState.position : originalPos;
+
+                new TWEEN.Tween(obj.position)
+                    .to({ x: targetPos.x, y: targetPos.y, z: targetPos.z }, 800)
+                    .easing(TWEEN.Easing.Cubic.Out)
+                    .start();
+            }
+        }
+    });
+}
+
 function resetAllObjects() {
     if (highlightedObject) {
         unhighlightObject(highlightedObject);
@@ -264,8 +315,12 @@ function resetAllObjects() {
     }
 
     movedObjects.forEach((state) => {
+        const originalPos = originalPositions.get(state.object.uuid);
+        const isVisible = visibleTypes.has(state.object.userData?.type);
+        const targetY = isVisible ? originalPos.y : originalPos.y + HIDE_OFFSET;
+
         new TWEEN.Tween(state.object.position)
-            .to({ x: state.position.x, y: state.position.y, z: state.position.z }, 800)
+            .to({ x: originalPos.x, y: targetY, z: originalPos.z }, 800)
             .easing(TWEEN.Easing.Cubic.Out)
             .onComplete(() => {
                 state.object.material = state.material;
