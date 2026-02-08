@@ -127,31 +127,6 @@ The `viewer.js` implementation is intentionally kept **minimal and readable** (~
 
 Developers can extend this foundation with features like cross-sections, measurement tools, annotation systems, or VR support while maintaining the core interaction pattern.
 
-## Customization
-
-### Using Your Own 3D Model
-
-To replace the anatomical model with your own GLB/GLTF file:
-
-1. Export your 3D model as GLB (optionally with DRACO compression)
-2. Replace `public/models/body.glb` with your model file
-3. Update the model path in `public/viewer.js` if you use a different filename:
-   ```javascript
-   loader.load('./models/your-model.glb', function (gltf) {
-       // ...
-   });
-   ```
-
-### Adjusting Visual Settings
-
-Edit `public/viewer.js` to customize:
-
-- **Animation Duration**: Change `800` in the Tween duration (line ~XX)
-- **Transparency Level**: Change `0.3` in `material.opacity` animation
-- **Highlight Color**: Modify the color calculation for transparency effect
-- **Camera Position**: Adjust `camera.position.set(x, y, z)` values
-- **Easing Function**: Change `TWEEN.Easing.Cubic.Out` to other easing functions
-
 ## Browser Support
 
 - Chrome/Edge (recommended)
