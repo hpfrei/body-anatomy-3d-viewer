@@ -158,6 +158,43 @@ function showObjectInfo(object) {
     const infoTitle = document.getElementById('info-title');
     const infoDescription = document.getElementById('info-description');
 
+    // Check if clicking on an already moved object - if so, restore it
+    if (clickedObjects.has(object)) {
+        const originalState = clickedObjects.get(object);
+
+        // If the object was already moved away, restore it
+        if (originalState.moved) {
+            // Animate back to original position
+            new TWEEN.Tween(object.position)
+                .to({
+                    x: originalState.position.x,
+                    y: originalState.position.y,
+                    z: originalState.position.z
+                }, 800)
+                .easing(TWEEN.Easing.Cubic.Out)
+                .onComplete(() => {
+                    // Restore original material after animation
+                    object.material = originalState.material;
+                })
+                .start();
+
+            // Remove from clicked objects
+            clickedObjects.delete(object);
+            selectedObject = null;
+
+            // Show info for this object
+            const name = object.userData?.name || object.name || 'Unnamed Object';
+            let description = object.userData?.description || 'No description available.';
+
+            infoTitle.textContent = name;
+            infoDescription.textContent = description;
+            infoDescription.style.whiteSpace = 'pre-line';
+            infoPanel.classList.remove('hidden');
+
+            return; // Exit early after restoring
+        }
+    }
+
     // If selecting a different object, move the previous one away
     if (selectedObject && selectedObject !== object) {
         if (clickedObjects.has(selectedObject)) {
