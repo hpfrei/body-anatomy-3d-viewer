@@ -6,31 +6,22 @@ import { DRACOLoader } from 'three/addons/DRACOLoader.js';
 let scene, camera, renderer, controls;
 let raycaster, mouse;
 let clickableObjects = [];
-let selectedObject = null;
-let clickedObjects = new Map(); // Store clicked objects with their original materials and positions
-const MOVE_DISTANCE = 0.3; // Distance to move objects outward
+let highlightedObject = null;
+let movedObjects = new Map(); // uuid -> { object, material, position, underneathUUIDs: [] }
+const MOVE_DISTANCE = 0.3;
 
 function init() {
-    // Scene
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a1a1a);
 
-    // Camera
-    camera = new THREE.PerspectiveCamera(
-        75,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        1000
-    );
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(5, 5, 5);
 
-    // Renderer
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-    // Lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
@@ -42,7 +33,6 @@ function init() {
     directionalLight2.position.set(-10, -10, -5);
     scene.add(directionalLight2);
 
-    // Controls
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
@@ -50,27 +40,21 @@ function init() {
     controls.minDistance = 1;
     controls.maxDistance = 50;
 
-    // Raycaster for click detection
     raycaster = new THREE.Raycaster();
     mouse = new THREE.Vector2();
 
-    // Load GLB model
     loadModel();
 
-    // Event listeners
     window.addEventListener('resize', onWindowResize);
     renderer.domElement.addEventListener('click', onMouseClick);
     document.getElementById('close-btn').addEventListener('click', closeInfoPanel);
     document.getElementById('reset-btn').addEventListener('click', resetAllObjects);
 
-    // Animation loop
     animate();
 }
 
 function loadModel() {
     const loader = new GLTFLoader();
-
-    // Setup Draco decoder
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('./libs/draco/');
     loader.setDRACOLoader(dracoLoader);
@@ -81,12 +65,10 @@ function loadModel() {
             const model = gltf.scene;
             scene.add(model);
 
-            // Center the model
             const box = new THREE.Box3().setFromObject(model);
             const center = box.getCenter(new THREE.Vector3());
             model.position.sub(center);
 
-            // Adjust camera to fit the model
             const size = box.getSize(new THREE.Vector3());
             const maxDim = Math.max(size.x, size.y, size.z);
             const fov = camera.fov * (Math.PI / 180);
@@ -95,7 +77,6 @@ function loadModel() {
             camera.lookAt(0, 0, 0);
             controls.update();
 
-            // Collect all meshes for click detection
             model.traverse((child) => {
                 if (child.isMesh) {
                     clickableObjects.push(child);
@@ -104,12 +85,8 @@ function loadModel() {
 
             console.log('Model loaded successfully');
         },
-        (progress) => {
-            console.log('Loading:', (progress.loaded / progress.total * 100) + '%');
-        },
-        (error) => {
-            console.error('Error loading model:', error);
-        }
+        (progress) => console.log('Loading:', (progress.loaded / progress.total * 100) + '%'),
+        (error) => console.error('Error loading model:', error)
     );
 }
 
@@ -120,184 +97,174 @@ function onWindowResize() {
 }
 
 function onMouseClick(event) {
-    // Calculate mouse position in normalized device coordinates
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-    // Update raycaster
     raycaster.setFromCamera(mouse, camera);
-
-    // Check for intersections with all objects
     const intersects = raycaster.intersectObjects(clickableObjects, false);
 
     if (intersects.length > 0) {
-        // Find the first object that hasn't been clicked yet, or use the first one
-        let targetObject = null;
-
-        for (const intersect of intersects) {
-            const obj = intersect.object;
-            if (!clickedObjects.has(obj)) {
-                targetObject = obj;
-                break;
-            }
-        }
-
-        // If all intersected objects were already clicked, use the first one
-        if (!targetObject && intersects.length > 0) {
-            targetObject = intersects[0].object;
-        }
-
-        if (targetObject) {
-            showObjectInfo(targetObject);
-        }
+        handleObjectClick(intersects[0].object);
     }
+}
+
+function handleObjectClick(object) {
+    // Clicking moved object -> restore it and objects underneath
+    if (movedObjects.has(object.uuid)) {
+        restoreObject(object.uuid, true);
+        return;
+    }
+
+    // Clicking same highlighted object -> move it away
+    if (highlightedObject === object) {
+        moveObjectAway(object);
+        return;
+    }
+
+    // Clicking different object -> unhighlight previous, highlight new
+    if (highlightedObject) {
+        unhighlightObject(highlightedObject);
+    }
+
+    highlightObject(object);
+}
+
+function highlightObject(object) {
+    if (!object.userData.originalMaterial) {
+        object.userData.originalMaterial = object.material;
+    }
+
+    object.material = object.material.clone();
+    object.material.emissive = new THREE.Color(0xff0000);
+    object.material.emissiveIntensity = 0.3;
+
+    highlightedObject = object;
+    showObjectInfo(object);
+}
+
+function unhighlightObject(object) {
+    if (object.userData.originalMaterial) {
+        object.material = object.userData.originalMaterial;
+        delete object.userData.originalMaterial;
+    }
+}
+
+function moveObjectAway(object) {
+    if (!object.userData.originalMaterial) return;
+
+    const underneathUUIDs = findObjectsUnderneath(object);
+
+    movedObjects.set(object.uuid, {
+        object: object,
+        material: object.userData.originalMaterial,
+        position: object.position.clone(),
+        underneathUUIDs: underneathUUIDs
+    });
+
+    const box = new THREE.Box3().setFromObject(object);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    const direction = center.normalize();
+    const targetPos = object.position.clone().add(direction.multiplyScalar(MOVE_DISTANCE));
+
+    object.material = object.material.clone();
+    object.material.transparent = true;
+    object.material.opacity = 0.3;
+    object.material.color.set(0xff0000);
+    object.material.emissive = new THREE.Color(0x000000);
+    object.material.depthWrite = false;
+
+    new TWEEN.Tween(object.position)
+        .to({ x: targetPos.x, y: targetPos.y, z: targetPos.z }, 800)
+        .easing(TWEEN.Easing.Cubic.Out)
+        .start();
+
+    delete object.userData.originalMaterial;
+    highlightedObject = null;
+}
+
+function findObjectsUnderneath(object) {
+    const objectBox = new THREE.Box3().setFromObject(object);
+    const underneathUUIDs = [];
+
+    // Check which objects overlap with this one
+    clickableObjects.forEach(obj => {
+        if (obj.uuid === object.uuid) return;
+
+        const objBox = new THREE.Box3().setFromObject(obj);
+
+        // If bounding boxes intersect, object is underneath
+        if (objectBox.intersectsBox(objBox)) {
+            underneathUUIDs.push(obj.uuid);
+        }
+    });
+
+    return underneathUUIDs;
+}
+
+function restoreObject(uuid, shouldHighlight = false) {
+    const state = movedObjects.get(uuid);
+    if (!state) return;
+
+    const object = state.object;
+
+    // Only unhighlight for top-level restore
+    if (shouldHighlight && highlightedObject) {
+        unhighlightObject(highlightedObject);
+    }
+
+    new TWEEN.Tween(object.position)
+        .to({ x: state.position.x, y: state.position.y, z: state.position.z }, 800)
+        .easing(TWEEN.Easing.Cubic.Out)
+        .onComplete(() => {
+            object.material = state.material;
+            // Only highlight the clicked object, not recursively restored ones
+            if (shouldHighlight) {
+                highlightObject(object);
+            }
+        })
+        .start();
+
+    movedObjects.delete(uuid);
+
+    // Restore objects that were underneath (don't highlight them)
+    state.underneathUUIDs.forEach(underneathUUID => {
+        if (movedObjects.has(underneathUUID)) {
+            restoreObject(underneathUUID, false);
+        }
+    });
 }
 
 function showObjectInfo(object) {
-    const infoPanel = document.getElementById('info-panel');
-    const infoTitle = document.getElementById('info-title');
-    const infoDescription = document.getElementById('info-description');
-
-    // Check if clicking on an already moved object - if so, restore it
-    if (clickedObjects.has(object)) {
-        const originalState = clickedObjects.get(object);
-
-        // If the object was already moved away, restore it
-        if (originalState.moved) {
-            // Animate back to original position
-            new TWEEN.Tween(object.position)
-                .to({
-                    x: originalState.position.x,
-                    y: originalState.position.y,
-                    z: originalState.position.z
-                }, 800)
-                .easing(TWEEN.Easing.Cubic.Out)
-                .onComplete(() => {
-                    // Restore original material after animation
-                    object.material = originalState.material;
-                })
-                .start();
-
-            // Remove from clicked objects
-            clickedObjects.delete(object);
-            selectedObject = null;
-
-            // Show info for this object
-            const name = object.userData?.name || object.name || 'Unnamed Object';
-            let description = object.userData?.description || 'No description available.';
-
-            infoTitle.textContent = name;
-            infoDescription.textContent = description;
-            infoDescription.style.whiteSpace = 'pre-line';
-            infoPanel.classList.remove('hidden');
-
-            return; // Exit early after restoring
-        }
-    }
-
-    // If selecting a different object, move the previous one away
-    if (selectedObject && selectedObject !== object) {
-        if (clickedObjects.has(selectedObject)) {
-            // Dim the previous object
-            selectedObject.material.color.set(0xff0000);
-            selectedObject.material.opacity = 0.3;
-
-            // Move it away now that we're looking at something underneath
-            const originalState = clickedObjects.get(selectedObject);
-            if (!originalState.moved) {
-                const objectCenter = new THREE.Vector3();
-                const box = new THREE.Box3().setFromObject(selectedObject);
-                box.getCenter(objectCenter);
-
-                // Calculate target position
-                const direction = objectCenter.clone().normalize();
-                const targetPosition = selectedObject.position.clone().add(
-                    direction.multiplyScalar(MOVE_DISTANCE)
-                );
-
-                // Animate the movement
-                new TWEEN.Tween(selectedObject.position)
-                    .to({
-                        x: targetPosition.x,
-                        y: targetPosition.y,
-                        z: targetPosition.z
-                    }, 800)
-                    .easing(TWEEN.Easing.Cubic.Out)
-                    .start();
-
-                originalState.moved = true;
-            }
-        }
-    }
-
-    // If this object hasn't been clicked before, store its original state (but don't move it yet)
-    if (!clickedObjects.has(object)) {
-        // Store original material and position
-        clickedObjects.set(object, {
-            material: object.material,
-            position: object.position.clone(),
-            moved: false
-        });
-
-        // Clone material and make it semi-transparent red
-        object.material = object.material.clone();
-        object.material.transparent = true;
-        object.material.opacity = 0.3;
-        object.material.color.set(0xff0000);
-        object.material.depthWrite = false; // Allow seeing through
-    }
-
-    // Highlight the current selection with brighter red
-    selectedObject = object;
-    object.material.color.set(0xff3333);
-    object.material.opacity = 0.5;
-
-    // Get object name
     const name = object.userData?.name || object.name || 'Unnamed Object';
+    const description = object.userData?.description || 'No description available.';
 
-    // Try to get description from userData or generate default
-    let description = object.userData?.description || 'No description available.';
-
-    infoTitle.textContent = name;
-    infoDescription.textContent = description;
-    infoDescription.style.whiteSpace = 'pre-line';
-    infoPanel.classList.remove('hidden');
+    document.getElementById('info-title').textContent = name;
+    document.getElementById('info-description').textContent = description;
+    document.getElementById('info-panel').classList.remove('hidden');
 }
 
 function closeInfoPanel() {
-    // Dim the current selection
-    if (selectedObject && clickedObjects.has(selectedObject)) {
-        selectedObject.material.color.set(0xff0000);
-        selectedObject.material.opacity = 0.3;
-    }
-    selectedObject = null;
     document.getElementById('info-panel').classList.add('hidden');
 }
 
 function resetAllObjects() {
-    // Animate all clicked objects back to their original positions
-    clickedObjects.forEach((originalState, object) => {
-        // Animate position back
-        new TWEEN.Tween(object.position)
-            .to({
-                x: originalState.position.x,
-                y: originalState.position.y,
-                z: originalState.position.z
-            }, 800)
+    if (highlightedObject) {
+        unhighlightObject(highlightedObject);
+        highlightedObject = null;
+    }
+
+    movedObjects.forEach((state) => {
+        new TWEEN.Tween(state.object.position)
+            .to({ x: state.position.x, y: state.position.y, z: state.position.z }, 800)
             .easing(TWEEN.Easing.Cubic.Out)
             .onComplete(() => {
-                // Restore material after animation completes
-                object.material = originalState.material;
+                state.object.material = state.material;
             })
             .start();
     });
 
-    // Clear tracking after animations start
-    setTimeout(() => {
-        clickedObjects.clear();
-        selectedObject = null;
-    }, 850);
-
+    setTimeout(() => movedObjects.clear(), 850);
     closeInfoPanel();
 }
 
@@ -308,5 +275,4 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-// Initialize the scene
 init();
