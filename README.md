@@ -10,9 +10,11 @@ An interactive 3D anatomy viewer built with Three.js that allows users to explor
 - **Visual Feedback**: Subtle red emissive glow for highlighted objects with smooth transitions
 - **Smart Layer Navigation**: Click highlighted objects to move them away and reveal deeper structures
 - **Intelligent Restore**: Clicking moved objects restores them along with any hidden underlying structures
-- **Smooth Animations**: Powered by Tween.js with 800ms Cubic.Out easing for fluid motion
+- **Type Filters**: Toggle muscles and bones visibility independently - hidden objects move to floor piles
+- **Smooth Animations**: Constant-speed curved animations using CatmullRom splines
 - **Orbit Controls**: Intuitive camera navigation - click and drag to rotate, scroll to zoom
 - **Rich Info Panel**: Displays anatomical names, descriptions, and educational wiki links
+- **XYZ Axes Helper**: Toggle coordinate axes display (X=red, Y=green, Z=blue) for spatial reference
 - **Reset Functionality**: One-click button to restore all objects to their original state
 - **DRACO Compression**: Efficient 3D model loading with optimized file size
 - **WebGL Rendering**: Hardware-accelerated graphics for smooth performance
@@ -51,9 +53,12 @@ Visit the live demo at: [https://www.hpfreilabs.com/body-anatomy-3d-viewer/](htt
 - **Rotate**: Left-click and drag to rotate the camera around the model
 - **Zoom**: Scroll up/down to zoom in/out
 - **Pan**: Right-click and drag to pan the camera
-- **Select Object**: Left-click on any mesh to make it semi-transparent and view underlying structures
-- **View Info**: Selected objects display metadata in the info panel
-- **Reset**: Click the "Reset All" button to restore all objects to their original opacity
+- **Select Object**: Left-click on any mesh to highlight it and view info
+- **Move Away**: Click highlighted object again to move it to its pile on the floor
+- **Restore**: Click moved objects to restore them back to position
+- **Toggle Muscles/Bones**: Hide/show muscles or bones independently (moves to floor piles)
+- **Toggle Axes**: Show/hide XYZ coordinate axes for spatial reference
+- **Reset All**: Restore all objects to their original positions
 
 ### Navigation Tips
 
