@@ -79,6 +79,25 @@ canvas {
 #info-description {
     line-height: 1.5;
     color: #ddd;
+    margin-bottom: 10px;
+}
+
+.wiki-link {
+    display: inline-block;
+    color: #66b3ff;
+    text-decoration: none;
+    font-size: 13px;
+    padding: 6px 12px;
+    background: rgba(102, 179, 255, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(102, 179, 255, 0.3);
+    transition: all 0.2s;
+}
+
+.wiki-link:hover {
+    background: rgba(102, 179, 255, 0.2);
+    border-color: rgba(102, 179, 255, 0.5);
+    transform: translateX(2px);
 }
 
 .reset-btn {

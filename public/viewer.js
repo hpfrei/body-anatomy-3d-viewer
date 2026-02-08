@@ -236,11 +236,19 @@ function restoreObject(uuid, shouldHighlight = false) {
 }
 
 function showObjectInfo(object) {
-    const name = object.userData?.name || object.name || 'Unnamed Object';
-    const description = object.userData?.description || 'No description available.';
+    const {name, description, type, wikiLink} = object?.userData || {};
 
-    document.getElementById('info-title').textContent = name;
-    document.getElementById('info-description').textContent = description;
+    document.getElementById('info-title').textContent = name || object.name || 'Unnamed Object';
+    document.getElementById('info-description').textContent = description || 'No description available.';
+
+    const wikiLinkEl = document.getElementById('info-wiki-link');
+    if (wikiLink) {
+        wikiLinkEl.href = wikiLink;
+        wikiLinkEl.style.display = 'block';
+    } else {
+        wikiLinkEl.style.display = 'none';
+    }
+
     document.getElementById('info-panel').classList.remove('hidden');
 }
 

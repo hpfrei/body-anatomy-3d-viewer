@@ -7,12 +7,14 @@ An interactive 3D anatomy viewer built with Three.js that allows users to explor
 ## Features
 
 - **Click-Through Layered Meshes**: Click on any anatomical structure (muscles, bones) to explore underlying layers
-- **Visual Feedback**: Semi-transparent red highlighting with smooth transparency transitions
+- **Visual Feedback**: Subtle red emissive glow for highlighted objects with smooth transitions
+- **Smart Layer Navigation**: Click highlighted objects to move them away and reveal deeper structures
+- **Intelligent Restore**: Clicking moved objects restores them along with any hidden underlying structures
 - **Smooth Animations**: Powered by Tween.js with 800ms Cubic.Out easing for fluid motion
 - **Orbit Controls**: Intuitive camera navigation - click and drag to rotate, scroll to zoom
-- **Object Info Panel**: Displays metadata and information about selected anatomical structures
+- **Rich Info Panel**: Displays anatomical names, descriptions, and educational wiki links
 - **Reset Functionality**: One-click button to restore all objects to their original state
-- **DRACO Compression Support**: Efficient 3D model loading with DRACO compression
+- **DRACO Compression**: Efficient 3D model loading with optimized file size
 - **WebGL Rendering**: Hardware-accelerated graphics for smooth performance
 
 ## Demo
@@ -92,21 +94,38 @@ body-anatomy-3d-viewer/
 - **[DRACO](https://google.github.io/draco/)**: 3D geometry compression library by Google
 - **WebGL**: Hardware-accelerated 3D graphics rendering
 
+## Model Preparation
+
+The anatomical model (`body.glb`) has been specifically prepared for optimal web browser performance:
+
+- **Source**: Derived from the [Z-Anatomy](https://www.z-anatomy.com/) anatomical dataset
+- **Processing**: Extensively processed in Blender using custom Python scripts to:
+  - Simplify geometry for reduced file size while maintaining anatomical accuracy
+  - Optimize mesh topology for efficient rendering
+  - Embed structured metadata (names, descriptions, wiki links) into each mesh's custom data
+  - Apply DRACO compression for minimal network transfer size
+- **Result**: A lightweight, browser-friendly model (6.9 MB) with rich, queryable anatomical data
+
+This preprocessing pipeline transforms the comprehensive Z-Anatomy dataset into a web-optimized format that loads quickly and performs smoothly across devices, while preserving essential anatomical information and educational links.
+
 ## How It Works
 
-1. **Model Loading**: The app uses GLTFLoader to load the anatomical model (body.glb) with DRACO compression
+1. **Model Loading**: GLTFLoader loads the optimized anatomical model with DRACO compression
 2. **Scene Setup**: Three.js creates a 3D scene with camera, lights, and orbit controls
-3. **Raycasting**: Mouse clicks are converted to 3D raycasts to detect which mesh was clicked
-4. **Animation**: When a mesh is clicked, Tween.js smoothly animates its opacity to 0.3 (semi-transparent red)
-5. **Info Display**: Metadata from the clicked object is extracted and displayed in the info panel
-6. **Reset**: The reset button uses Tween.js to animate all meshes back to full opacity
+3. **Interaction**: Mouse clicks use raycasting to detect selected meshes
+4. **Highlighting**: Selected objects display a subtle red emissive glow
+5. **Layer Navigation**: Clicking highlighted objects moves them away to reveal underlying structures
+6. **Info Display**: Metadata (name, description, wiki links) from each object's custom data is displayed
+7. **Smart Restore**: Clicking moved objects restores them along with any structures that were underneath
 
-### Key Implementation Details
+### Viewer Code Design
 
-- **Transparency**: Uses `material.transparent = true` with `material.opacity` animation
-- **Highlighting**: Applies semi-transparent red color (`#ff0000` at 0.3 opacity)
-- **Animation Easing**: Cubic.Out easing provides smooth, natural-feeling transitions
-- **Camera**: PerspectiveCamera with 75° FOV positioned for optimal model viewing
+The `viewer.js` implementation is intentionally kept **minimal and readable** (~280 lines) to serve as:
+- A clean reference implementation for anatomical model interaction
+- A starting point for custom viewers with specialized features
+- An educational example of Three.js best practices for medical/biological visualization
+
+Developers can extend this foundation with features like cross-sections, measurement tools, annotation systems, or VR support while maintaining the core interaction pattern.
 
 ## Customization
 
