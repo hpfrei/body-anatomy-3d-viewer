@@ -10,8 +10,9 @@ let highlightedObject = null;
 let movedObjects = new Map(); // uuid -> { object, material, position, underneathUUIDs: [] }
 let originalPositions = new Map(); // uuid -> original position
 let visibleTypes = new Set(['muscle', 'bone']); // Currently visible types
-const PILE_Y = -2.2; // Floor level for piles, below body
-const PILE_SPREAD = 0.6; // Random spread in pile
+let axesHelper;
+const PILE_Y = -1.5; // Feet level for piles
+const PILE_RADIUS = 0.3; // Pile radius
 
 function init() {
     scene = new THREE.Scene();
@@ -46,6 +47,20 @@ function init() {
     raycaster = new THREE.Raycaster();
     mouse = new THREE.Vector2();
 
+    // Add axes helper with labels
+    axesHelper = new THREE.Group();
+    axesHelper.visible = false;
+
+    const axes = new THREE.AxesHelper(2);
+    axesHelper.add(axes);
+
+    // Add labels (X=red, Y=green, Z=blue)
+    axesHelper.add(createAxisLabel('X', 2.2, 0, 0, 0xff0000));
+    axesHelper.add(createAxisLabel('Y', 0, 2.2, 0, 0x00ff00));
+    axesHelper.add(createAxisLabel('Z', 0, 0, 2.2, 0x0000ff));
+
+    scene.add(axesHelper);
+
     loadModel();
 
     window.addEventListener('resize', onWindowResize);
@@ -54,6 +69,7 @@ function init() {
     document.getElementById('reset-btn').addEventListener('click', resetAllObjects);
     document.getElementById('toggle-muscles').addEventListener('click', () => toggleType('muscle'));
     document.getElementById('toggle-bones').addEventListener('click', () => toggleType('bone'));
+    document.getElementById('toggle-axes').addEventListener('click', toggleAxes);
 
     animate();
 }
@@ -156,32 +172,17 @@ function unhighlightObject(object) {
 }
 
 function getPilePosition(type) {
-    const xOffset = type === 'muscle' ? -0.2 : 0.2;
+    const xOffset = type === 'muscle' ? -0.9 : 0.9;
     return {
-        x: xOffset + (Math.random() - 0.5) * PILE_SPREAD,
-        y: PILE_Y + Math.random() * 0.05,  // Minimal Y variation for flatter pile
-        z: (Math.random() - 0.5) * PILE_SPREAD
+        x: xOffset + (Math.random() - 0.5) * PILE_RADIUS * 2,
+        y: PILE_Y + Math.random() * 0.2,  // 0.2 units vertical spread
+        z: (Math.random() - 0.5) * PILE_RADIUS * 2
     };
 }
 
 function moveToPile(object, duration = 800) {
     const pile = getPilePosition(object.userData?.type);
-    const current = object.position;
-    const midPoint = {
-        x: (current.x + pile.x) / 2,
-        y: Math.max(current.y, pile.y) + 0.8,
-        z: (current.z + pile.z) / 2
-    };
-
-    new TWEEN.Tween(object.position)
-        .to(midPoint, duration / 2)
-        .easing(TWEEN.Easing.Cubic.Out)
-        .chain(
-            new TWEEN.Tween(object.position)
-                .to(pile, duration / 2)
-                .easing(TWEEN.Easing.Cubic.In)
-        )
-        .start();
+    animateSmoothArc(object, pile, duration);
 }
 
 function moveObjectAway(object) {
@@ -238,27 +239,38 @@ function restoreObject(uuid, shouldHighlight = false) {
         unhighlightObject(highlightedObject);
     }
 
-    const current = object.position;
+    const current = object.position.clone();
     const target = state.position;
-    const midPoint = {
-        x: (current.x + target.x) / 2,
-        y: Math.max(current.y, target.y) + 0.8,
-        z: (current.z + target.z) / 2
+    const height = Math.max(current.y, target.y) + 0.5;
+    const mid1 = {
+        x: current.x * 0.7 + target.x * 0.3,
+        y: current.y * 0.5 + height * 0.5,
+        z: current.z * 0.7 + target.z * 0.3
+    };
+    const mid2 = {
+        x: current.x * 0.3 + target.x * 0.7,
+        y: target.y * 0.5 + height * 0.5,
+        z: current.z * 0.3 + target.z * 0.7
     };
 
     new TWEEN.Tween(object.position)
-        .to(midPoint, 400)
-        .easing(TWEEN.Easing.Cubic.Out)
+        .to(mid1, 240)
+        .easing(TWEEN.Easing.Sinusoidal.Out)
         .chain(
             new TWEEN.Tween(object.position)
-                .to(target, 400)
-                .easing(TWEEN.Easing.Cubic.In)
-                .onComplete(() => {
-                    object.material = state.material;
-                    if (shouldHighlight) {
-                        highlightObject(object);
-                    }
-                })
+                .to(mid2, 240)
+                .easing(TWEEN.Easing.Sinusoidal.InOut)
+                .chain(
+                    new TWEEN.Tween(object.position)
+                        .to(target, 320)
+                        .easing(TWEEN.Easing.Sinusoidal.In)
+                        .onComplete(() => {
+                            object.material = state.material;
+                            if (shouldHighlight) {
+                                highlightObject(object);
+                            }
+                        })
+                )
         )
         .start();
 
@@ -293,6 +305,37 @@ function closeInfoPanel() {
     document.getElementById('info-panel').classList.add('hidden');
 }
 
+function createAxisLabel(text, x, y, z, color) {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = 64;
+    canvas.height = 64;
+
+    context.fillStyle = '#' + color.toString(16).padStart(6, '0');
+    context.font = 'bold 48px Arial';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(text, 32, 32);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
+    const sprite = new THREE.Sprite(spriteMaterial);
+    sprite.position.set(x, y, z);
+    sprite.scale.set(0.3, 0.3, 1);
+
+    return sprite;
+}
+
+function toggleAxes() {
+    const btn = document.getElementById('toggle-axes');
+    axesHelper.visible = !axesHelper.visible;
+    if (axesHelper.visible) {
+        btn.classList.add('active');
+    } else {
+        btn.classList.remove('active');
+    }
+}
+
 function toggleType(type) {
     const btn = document.getElementById(`toggle-${type}s`);
 
@@ -322,25 +365,41 @@ function showObjectsOfType(type) {
             if (originalPos) {
                 const movedState = movedObjects.get(obj.uuid);
                 const targetPos = movedState ? movedState.position : originalPos;
-                const current = obj.position;
-                const midPoint = {
-                    x: (current.x + targetPos.x) / 2,
-                    y: Math.max(current.y, targetPos.y) + 0.8,
-                    z: (current.z + targetPos.z) / 2
-                };
-
-                new TWEEN.Tween(obj.position)
-                    .to(midPoint, 400)
-                    .easing(TWEEN.Easing.Cubic.Out)
-                    .chain(
-                        new TWEEN.Tween(obj.position)
-                            .to(targetPos, 400)
-                            .easing(TWEEN.Easing.Cubic.In)
-                    )
-                    .start();
+                animateSmoothArc(obj, targetPos, 800);
             }
         }
     });
+}
+
+function animateSmoothArc(object, target, duration) {
+    const start = object.position.clone();
+    const height = Math.max(start.y, target.y) + 0.5;
+
+    // Create smooth curve with 4 control points
+    const curve = new THREE.CatmullRomCurve3([
+        start,
+        new THREE.Vector3(
+            start.x * 0.75 + target.x * 0.25,
+            start.y * 0.25 + height * 0.75,
+            start.z * 0.75 + target.z * 0.25
+        ),
+        new THREE.Vector3(
+            start.x * 0.25 + target.x * 0.75,
+            target.y * 0.25 + height * 0.75,
+            start.z * 0.25 + target.z * 0.75
+        ),
+        new THREE.Vector3(target.x, target.y, target.z)
+    ]);
+
+    const tweenObj = { t: 0 };
+    new TWEEN.Tween(tweenObj)
+        .to({ t: 1 }, duration)
+        .easing(TWEEN.Easing.Linear.None)
+        .onUpdate(() => {
+            const point = curve.getPointAt(tweenObj.t);
+            object.position.copy(point);
+        })
+        .start();
 }
 
 function resetAllObjects() {
@@ -354,25 +413,10 @@ function resetAllObjects() {
         const isVisible = visibleTypes.has(state.object.userData?.type);
 
         if (isVisible) {
-            const current = state.object.position;
-            const midPoint = {
-                x: (current.x + originalPos.x) / 2,
-                y: Math.max(current.y, originalPos.y) + 0.8,
-                z: (current.z + originalPos.z) / 2
-            };
-
-            new TWEEN.Tween(state.object.position)
-                .to(midPoint, 400)
-                .easing(TWEEN.Easing.Cubic.Out)
-                .chain(
-                    new TWEEN.Tween(state.object.position)
-                        .to(originalPos, 400)
-                        .easing(TWEEN.Easing.Cubic.In)
-                        .onComplete(() => {
-                            state.object.material = state.material;
-                        })
-                )
-                .start();
+            animateSmoothArc(state.object, originalPos, 800);
+            setTimeout(() => {
+                state.object.material = state.material;
+            }, 800);
         } else {
             moveToPile(state.object);
             state.object.material = state.material;
