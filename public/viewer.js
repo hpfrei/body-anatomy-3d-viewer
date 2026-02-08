@@ -10,7 +10,7 @@ let highlightedObject = null;
 let movedObjects = new Map(); // uuid -> { object, material, position, underneathUUIDs: [] }
 let originalPositions = new Map(); // uuid -> original position
 let visibleTypes = new Set(['muscle', 'bone']); // Currently visible types
-const PILE_Y = -1.0; // Near feet level for piles
+const PILE_Y = -2.2; // Floor level for piles, below body
 const PILE_SPREAD = 0.6; // Random spread in pile
 
 function init() {
