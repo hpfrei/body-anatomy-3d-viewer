@@ -102,11 +102,26 @@ The anatomical model (`body.glb`) has been specifically prepared for optimal web
 - **Processing**: Extensively processed in Blender using custom Python scripts to:
   - Simplify geometry for reduced file size while maintaining anatomical accuracy
   - Optimize mesh topology for efficient rendering
-  - Embed structured metadata (names, descriptions, wiki links) into each mesh's custom data
+  - Embed structured metadata into each mesh's custom data (userData)
   - Apply DRACO compression for minimal network transfer size
 - **Result**: A lightweight, browser-friendly model (6.9 MB) with rich, queryable anatomical data
 
-This preprocessing pipeline transforms the comprehensive Z-Anatomy dataset into a web-optimized format that loads quickly and performs smoothly across devices, while preserving essential anatomical information and educational links.
+### Metadata Structure
+
+Each mesh in the model contains structured data in its `userData` property:
+
+```javascript
+{
+  type: "muscle",                    // Anatomical type (muscle, bone, organ, etc.)
+  name: "Pectoralis Major",          // Common anatomical name
+  nameDetail: "Clavicular Head Of Pectoralis Major Muscle",  // Detailed anatomical name
+  wikiLink: "https://en.wikipedia.org/wiki/Pectoralis_major"  // Educational wiki link
+}
+```
+
+This metadata enables the viewer to display anatomical information and provide educational links when users interact with specific structures.
+
+This preprocessing pipeline transforms the comprehensive Z-Anatomy dataset into a web-optimized format that loads quickly and performs smoothly across devices, while preserving essential anatomical information and educational resources.
 
 ## How It Works
 

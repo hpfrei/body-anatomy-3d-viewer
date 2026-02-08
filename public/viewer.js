@@ -236,10 +236,11 @@ function restoreObject(uuid, shouldHighlight = false) {
 }
 
 function showObjectInfo(object) {
-    const {name, description, type, wikiLink} = object?.userData || {};
+    const {type, name, nameDetail, wikiLink} = object?.userData || {};
 
+    document.getElementById('info-type').textContent = type || '';
     document.getElementById('info-title').textContent = name || object.name || 'Unnamed Object';
-    document.getElementById('info-description').textContent = description || 'No description available.';
+    document.getElementById('info-detail').textContent = nameDetail || '';
 
     const wikiLinkEl = document.getElementById('info-wiki-link');
     if (wikiLink) {
