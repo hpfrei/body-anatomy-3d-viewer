@@ -10,8 +10,8 @@ let highlightedObject = null;
 let movedObjects = new Map(); // uuid -> { object, material, position, underneathUUIDs: [] }
 let originalPositions = new Map(); // uuid -> original position
 let visibleTypes = new Set(['muscle', 'bone']); // Currently visible types
-const PILE_Y = -3; // Floor level for piles
-const PILE_SPREAD = 1.5; // Random spread in pile
+const PILE_Y = -0.8; // Near feet level for piles
+const PILE_SPREAD = 1.2; // Random spread in pile
 
 function init() {
     scene = new THREE.Scene();
@@ -156,19 +156,31 @@ function unhighlightObject(object) {
 }
 
 function getPilePosition(type) {
-    const xOffset = type === 'muscle' ? -2.5 : 2.5;
+    const xOffset = type === 'muscle' ? -1.8 : 1.8;
     return {
         x: xOffset + (Math.random() - 0.5) * PILE_SPREAD,
-        y: PILE_Y + Math.random() * 0.3,
+        y: PILE_Y + Math.random() * 0.2,
         z: (Math.random() - 0.5) * PILE_SPREAD
     };
 }
 
 function moveToPile(object, duration = 800) {
     const pile = getPilePosition(object.userData?.type);
+    const current = object.position;
+    const midPoint = {
+        x: (current.x + pile.x) / 2,
+        y: Math.max(current.y, pile.y) + 0.8,
+        z: (current.z + pile.z) / 2
+    };
+
     new TWEEN.Tween(object.position)
-        .to(pile, duration)
+        .to(midPoint, duration / 2)
         .easing(TWEEN.Easing.Cubic.Out)
+        .chain(
+            new TWEEN.Tween(object.position)
+                .to(pile, duration / 2)
+                .easing(TWEEN.Easing.Cubic.In)
+        )
         .start();
 }
 
@@ -222,26 +234,36 @@ function restoreObject(uuid, shouldHighlight = false) {
 
     const object = state.object;
 
-    // Only unhighlight for top-level restore
     if (shouldHighlight && highlightedObject) {
         unhighlightObject(highlightedObject);
     }
 
+    const current = object.position;
+    const target = state.position;
+    const midPoint = {
+        x: (current.x + target.x) / 2,
+        y: Math.max(current.y, target.y) + 0.8,
+        z: (current.z + target.z) / 2
+    };
+
     new TWEEN.Tween(object.position)
-        .to({ x: state.position.x, y: state.position.y, z: state.position.z }, 800)
+        .to(midPoint, 400)
         .easing(TWEEN.Easing.Cubic.Out)
-        .onComplete(() => {
-            object.material = state.material;
-            // Only highlight the clicked object, not recursively restored ones
-            if (shouldHighlight) {
-                highlightObject(object);
-            }
-        })
+        .chain(
+            new TWEEN.Tween(object.position)
+                .to(target, 400)
+                .easing(TWEEN.Easing.Cubic.In)
+                .onComplete(() => {
+                    object.material = state.material;
+                    if (shouldHighlight) {
+                        highlightObject(object);
+                    }
+                })
+        )
         .start();
 
     movedObjects.delete(uuid);
 
-    // Restore objects that were underneath (don't highlight them)
     state.underneathUUIDs.forEach(underneathUUID => {
         if (movedObjects.has(underneathUUID)) {
             restoreObject(underneathUUID, false);
@@ -300,10 +322,21 @@ function showObjectsOfType(type) {
             if (originalPos) {
                 const movedState = movedObjects.get(obj.uuid);
                 const targetPos = movedState ? movedState.position : originalPos;
+                const current = obj.position;
+                const midPoint = {
+                    x: (current.x + targetPos.x) / 2,
+                    y: Math.max(current.y, targetPos.y) + 0.8,
+                    z: (current.z + targetPos.z) / 2
+                };
 
                 new TWEEN.Tween(obj.position)
-                    .to({ x: targetPos.x, y: targetPos.y, z: targetPos.z }, 800)
+                    .to(midPoint, 400)
                     .easing(TWEEN.Easing.Cubic.Out)
+                    .chain(
+                        new TWEEN.Tween(obj.position)
+                            .to(targetPos, 400)
+                            .easing(TWEEN.Easing.Cubic.In)
+                    )
                     .start();
             }
         }
@@ -321,12 +354,24 @@ function resetAllObjects() {
         const isVisible = visibleTypes.has(state.object.userData?.type);
 
         if (isVisible) {
+            const current = state.object.position;
+            const midPoint = {
+                x: (current.x + originalPos.x) / 2,
+                y: Math.max(current.y, originalPos.y) + 0.8,
+                z: (current.z + originalPos.z) / 2
+            };
+
             new TWEEN.Tween(state.object.position)
-                .to({ x: originalPos.x, y: originalPos.y, z: originalPos.z }, 800)
+                .to(midPoint, 400)
                 .easing(TWEEN.Easing.Cubic.Out)
-                .onComplete(() => {
-                    state.object.material = state.material;
-                })
+                .chain(
+                    new TWEEN.Tween(state.object.position)
+                        .to(originalPos, 400)
+                        .easing(TWEEN.Easing.Cubic.In)
+                        .onComplete(() => {
+                            state.object.material = state.material;
+                        })
+                )
                 .start();
         } else {
             moveToPile(state.object);
