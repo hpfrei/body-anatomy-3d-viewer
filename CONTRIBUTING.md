@@ -1,173 +1,115 @@
-# Contributing to Body Anatomy 3D Viewer
+# Contributing
 
-Thank you for your interest in contributing to Body Anatomy 3D Viewer! We welcome contributions from the community.
+Thanks for checking out this project! This is my first open source project, and I'm happy to have others contribute.
 
-## How to Contribute
+## What This Project Is
 
-### Reporting Bugs
+The core asset here is `body.glb` - a browser-optimized anatomical model. The viewer code (`viewer.js`) is a reference implementation showing how to use it. While the model is mostly complete, I may add features to the viewer, and I welcome contributions that make this more useful for everyone.
 
-If you find a bug, please create an issue on GitHub with the following information:
+## Ways to Contribute
 
-- **Clear Title**: Brief description of the issue
-- **Description**: Detailed explanation of the bug
-- **Steps to Reproduce**: Step-by-step instructions to reproduce the issue
-- **Expected Behavior**: What you expected to happen
-- **Actual Behavior**: What actually happened
-- **Environment**:
-  - Browser and version
-  - Operating System
-  - Node.js version (if applicable)
-- **Screenshots**: If applicable, add screenshots to help explain the problem
+### Report Bugs
 
-### Suggesting Features
+Found something broken? [Open an issue](https://github.com/hpfrei/body-anatomy-3d-viewer/issues) with:
+- What you expected to happen
+- What actually happened
+- Browser and OS you're using
+- Steps to reproduce (if possible)
 
-We welcome feature suggestions! Please create an issue with:
+Screenshots help a lot!
 
-- **Clear Title**: Brief description of the feature
-- **Description**: Detailed explanation of the proposed feature
-- **Use Case**: Why this feature would be useful
-- **Possible Implementation**: If you have ideas on how to implement it
+### Suggest Features
 
-### Submitting Pull Requests
+Have ideas for the viewer? Open an issue describing:
+- What you want to add
+- Why it would be useful
+- How you think it might work (optional)
 
-1. **Fork the Repository**: Click the "Fork" button on GitHub
+Good examples: measurement tools, annotations, keyboard shortcuts, VR support, better mobile controls.
 
-2. **Clone Your Fork**:
-   ```bash
-   git clone https://github.com/YOUR-USERNAME/body-anatomy-3d-viewer.git
-   cd body-anatomy-3d-viewer
-   ```
+### Improve Documentation
 
-3. **Create a Branch**:
-   ```bash
-   git checkout -b feature/your-feature-name
-   # or
-   git checkout -b fix/your-bug-fix
-   ```
+Spot a typo? Something unclear in the README? Documentation improvements are always welcome.
 
-4. **Make Your Changes**: Implement your feature or bug fix
+### Submit Code
 
-5. **Test Your Changes**: Ensure everything works as expected
-   ```bash
-   npm start
-   # Test in your browser at http://localhost:3000
-   ```
+If you want to add a feature or fix a bug:
 
-6. **Commit Your Changes**:
-   ```bash
-   git add .
-   git commit -m "Add feature: description of your changes"
-   ```
+1. **Fork this repo** and clone your fork
+2. **Create a branch**: `git checkout -b fix-something` or `git checkout -b add-feature`
+3. **Make your changes**
+4. **Test it**: Run `npx serve -s public -l 3000` and verify everything works
+5. **Commit**: `git commit -m "Clear description of what you did"`
+6. **Push**: `git push origin your-branch-name`
+7. **Open a Pull Request** on GitHub
 
-7. **Push to Your Fork**:
-   ```bash
-   git push origin feature/your-feature-name
-   ```
+#### Pull Request Tips
 
-8. **Create a Pull Request**: Go to the original repository on GitHub and click "New Pull Request"
+- Keep it focused - one feature or fix per PR
+- Explain what you changed and why
+- Reference any related issues (e.g., "Fixes #42")
+- Test in multiple browsers if you can
+- Follow the existing code style
 
-### Pull Request Guidelines
+## Code Style
 
-- **One Feature Per PR**: Keep pull requests focused on a single feature or bug fix
-- **Clear Description**: Explain what your PR does and why
-- **Reference Issues**: If your PR fixes an issue, mention it (e.g., "Fixes #123")
-- **Test Your Code**: Ensure your changes work correctly
-- **Keep It Simple**: Follow the existing code style and patterns
+Keep it simple and readable:
 
-## Code Style Guidelines
+**JavaScript:**
+- Use modern ES6+ syntax (const, let, arrow functions)
+- 4 spaces for indentation
+- Descriptive variable names
+- Comments for complex logic only
 
-### JavaScript
-
-- **ES6+ Syntax**: Use modern JavaScript features (const, let, arrow functions, etc.)
-- **Consistent Indentation**: Use 4 spaces for indentation
-- **Meaningful Names**: Use descriptive variable and function names
-- **Comments**: Add comments for complex logic, but prefer self-documenting code
-- **No Unused Code**: Remove commented-out code and unused variables
-
-Example:
-```javascript
-// Good
-const selectedMesh = intersects[0].object;
-mesh.material.transparent = true;
-
-// Avoid
-var m = intersects[0].object; // mesh
-m.material.transparent = true; //make transparent
-```
-
-### CSS
-
-- **Consistent Naming**: Use kebab-case for class names
-- **Logical Grouping**: Group related properties together
-- **Comments**: Add comments for non-obvious styling decisions
-
-### HTML
-
-- **Semantic Elements**: Use appropriate HTML5 semantic elements
-- **Accessibility**: Include ARIA labels where appropriate
-- **Consistent Indentation**: Use 4 spaces for indentation
+**CSS/HTML:**
+- Keep the existing style
+- Use semantic HTML where possible
+- Test on different screen sizes
 
 ## Development Setup
 
-1. **Install Node.js**: Ensure you have Node.js 14.0.0 or higher installed
+Super simple - no build tools or npm dependencies:
 
-2. **Install Dependencies**:
-   ```bash
-   npm install
-   ```
+```bash
+git clone https://github.com/YOUR-USERNAME/body-anatomy-3d-viewer.git
+cd body-anatomy-3d-viewer
+npx serve -s public -l 3000
+```
 
-3. **Run Development Server**:
-   ```bash
-   npm start
-   ```
+Open http://localhost:3000 and you're running the viewer.
 
-4. **Access the App**: Open http://localhost:3000 in your browser
+All the code is in `public/`:
+- `viewer.js` - Main Three.js logic
+- `index.html` - HTML structure
+- `style.css` - UI styling
+- `body.glb` - The 3D model
+- `libs/` - Bundled Three.js libraries
 
-## Project Architecture
+## Using the Model in Your Own Project
 
-### Key Files
-
-- **server.js**: Express.js server for static file serving (minimal, ~15 lines)
-- **public/viewer.js**: Main Three.js application logic
-- **public/index.html**: HTML structure and UI elements
-- **public/style.css**: Styling for UI components
-- **public/models/body.glb**: 3D anatomical model
-
-### Three.js Architecture
-
-- **Scene Setup**: Camera, lights, and renderer configuration
-- **Model Loading**: GLTFLoader with DRACO compression support
-- **Interaction**: Raycaster for click detection on 3D objects
-- **Animation**: Tween.js for smooth opacity transitions
-- **Controls**: OrbitControls for camera navigation
+If you build something cool with `body.glb`, I'd love to hear about it! You don't need to contribute it back, but if you make improvements to the model itself or find the viewer code useful, consider sharing your changes.
 
 ## Testing
 
-Currently, the project uses manual testing. When making changes:
+No automated tests yet - just manual testing:
+- Click around and make sure interactions work
+- Test the toggle buttons
+- Verify animations are smooth
+- Check that reset works
+- Try it in different browsers (Chrome, Firefox, Safari)
 
-1. **Visual Testing**: Test all visual changes across different browsers
-2. **Interaction Testing**: Verify click interactions work correctly
-3. **Animation Testing**: Ensure animations are smooth and complete properly
-4. **Reset Testing**: Confirm reset button restores all objects correctly
-5. **Responsive Testing**: Check that UI works on different screen sizes
+## Questions?
 
-## Questions or Need Help?
-
-- **Open an Issue**: For questions about contributing
-- **Check Existing Issues**: Someone might have asked the same question
-- **Be Patient**: Maintainers will respond as soon as possible
+Open an issue! I'm learning as I go, so don't hesitate to ask.
 
 ## Code of Conduct
 
-- **Be Respectful**: Treat everyone with respect and kindness
-- **Be Constructive**: Provide helpful, constructive feedback
-- **Be Patient**: Remember that maintainers and contributors are often volunteers
-- **Be Inclusive**: Welcome people of all backgrounds and experience levels
+Be respectful and constructive. This is a community project - help make it welcoming for everyone, regardless of experience level.
 
 ## License
 
-By contributing to Body Anatomy 3D Viewer, you agree that your contributions will be licensed under the BSD 3-Clause License.
+By contributing, you agree your contributions will be licensed under [CC-BY-SA-4.0](LICENSE), the same license as this project. This is required by the Z-Anatomy source material.
 
 ---
 
-Thank you for contributing to Body Anatomy 3D Viewer!
+Thanks for contributing!

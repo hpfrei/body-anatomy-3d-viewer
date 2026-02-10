@@ -1,8 +1,12 @@
 # Body Anatomy 3D Viewer
 
-An interactive 3D anatomy viewer built with Three.js that allows users to explore anatomical models through click-through layered visualization with smooth animations and visual feedback.
+An interactive 3D anatomy viewer built with Three.js. I created this because I needed a browser-optimized anatomical model for other projects and couldn't find anything suitable. The main asset here is `body.glb` - a lightweight 3D model derived from the Z-Anatomy dataset and optimized for web use. The included viewer demonstrates how to load and interact with the model in a browser.
 
 ![Body Anatomy 3D Viewer](screenshot.png)
+
+## Why This Exists
+
+Most anatomical 3D models are either too large for browser rendering or lack the detail needed for educational purposes. I processed the comprehensive Z-Anatomy dataset with Python scripts in Blender to create a model that's both detailed and performant in browsers. This viewer shows how to use it, but the real value is the model itself - you can integrate it into any Three.js project.
 
 ## Features
 
@@ -23,7 +27,7 @@ An interactive 3D anatomy viewer built with Three.js that allows users to explor
 
 Visit the live demo at: [https://www.hpfreilabs.com/body-anatomy-3d-viewer/](https://www.hpfreilabs.com/body-anatomy-3d-viewer/)
 
-## Installation
+## Quick Start
 
 1. Clone this repository:
    ```bash
@@ -31,20 +35,19 @@ Visit the live demo at: [https://www.hpfreilabs.com/body-anatomy-3d-viewer/](htt
    cd body-anatomy-3d-viewer
    ```
 
-2. Install dependencies:
+2. Start a local server:
    ```bash
-   npm install
+   npx serve -s public -l 3000
    ```
 
-3. Start the server:
-   ```bash
-   npm start
-   ```
+   This uses [serve](https://www.npmjs.com/package/serve) to host the static files. No installation required - npx downloads it temporarily.
 
-4. Open your browser and navigate to:
+3. Open your browser and navigate to:
    ```
    http://localhost:3000
    ```
+
+**Alternative:** You can use any static file server - Python's `http.server`, VS Code Live Server, etc. Just serve the `public/` directory.
 
 ## Usage
 
@@ -66,54 +69,24 @@ Visit the live demo at: [https://www.hpfreilabs.com/body-anatomy-3d-viewer/](htt
 - Use the info panel to learn about each selected structure
 - Combine rotation and zooming for detailed examination of specific areas
 
-## Project Structure
+## The 3D Model (body.glb)
 
-```
-body-anatomy-3d-viewer/
-├── public/
-│   ├── index.html          # Main HTML file
-│   ├── style.css           # Styling for UI elements
-│   ├── viewer.js           # Three.js viewer logic
-│   ├── models/
-│   │   └── body.glb        # 3D anatomical model (DRACO compressed)
-│   └── libs/
-│       ├── three.module.js        # Three.js core library
-│       ├── OrbitControls.js       # Camera controls
-│       ├── GLTFLoader.js          # GLTF/GLB loader
-│       ├── DRACOLoader.js         # DRACO compression support
-│       ├── tween.js               # Animation library
-│       └── draco/                 # DRACO decoder files
-├── server.js               # Express.js server for static file serving
-├── package.json            # Node.js dependencies and metadata
-├── README.md               # This file
-├── LICENSE                 # BSD-3-Clause license
-├── CONTRIBUTING.md         # Contribution guidelines
-└── CHANGELOG.md            # Version history
-```
+The core asset of this project is `body.glb` - a 6.9 MB anatomical model optimized for browser rendering. I created it by processing the massive Z-Anatomy dataset, which is too large for web use in its original form.
 
-## Technologies Used
+### How I Made It
 
-- **[Three.js](https://threejs.org/)**: WebGL-based 3D graphics library
-- **[Express.js](https://expressjs.com/)**: Minimal web server for static file serving
-- **[Tween.js](https://github.com/tweenjs/tween.js/)**: JavaScript animation library for smooth transitions
-- **[DRACO](https://google.github.io/draco/)**: 3D geometry compression library by Google
-- **WebGL**: Hardware-accelerated 3D graphics rendering
+The Z-Anatomy project provides incredibly detailed anatomical models, but they're designed for medical software, not browsers. I wrote Python scripts in Blender to:
 
-## Model Preparation
+- **Simplify geometry** while maintaining anatomical accuracy
+- **Optimize mesh topology** for efficient rendering
+- **Embed metadata** into each mesh (anatomical names, types, wiki links)
+- **Apply DRACO compression** to reduce file size by ~70%
 
-The anatomical model (`body.glb`) has been specifically prepared for optimal web browser performance:
-
-- **Source**: Derived from the [Z-Anatomy](https://www.z-anatomy.com/) anatomical dataset
-- **Processing**: Extensively processed in Blender using custom Python scripts to:
-  - Simplify geometry for reduced file size while maintaining anatomical accuracy
-  - Optimize mesh topology for efficient rendering
-  - Embed structured metadata into each mesh's custom data (userData)
-  - Apply DRACO compression for minimal network transfer size
-- **Result**: A lightweight, browser-friendly model (6.9 MB) with rich, queryable anatomical data
+This process took the comprehensive Z-Anatomy dataset and made it practical for web applications. The result is a model that loads quickly, renders smoothly, and still contains enough detail for educational purposes.
 
 ### Metadata Structure
 
-Each mesh in the model contains structured data in its `userData` property:
+Each mesh includes structured data in its `userData` property:
 
 ```javascript
 {
@@ -124,28 +97,52 @@ Each mesh in the model contains structured data in its `userData` property:
 }
 ```
 
-This metadata enables the viewer to display anatomical information and provide educational links when users interact with specific structures.
+This metadata is what enables the viewer to display anatomical information and educational links. You can use it in your own projects to build custom interfaces, search functionality, quizzes, etc.
 
-This preprocessing pipeline transforms the comprehensive Z-Anatomy dataset into a web-optimized format that loads quickly and performs smoothly across devices, while preserving essential anatomical information and educational resources.
+## The Viewer Implementation
 
-## How It Works
+`viewer.js` is a minimal reference implementation (~440 lines) showing how to load and interact with `body.glb`. It demonstrates:
 
-1. **Model Loading**: GLTFLoader loads the optimized anatomical model with DRACO compression
-2. **Scene Setup**: Three.js creates a 3D scene with camera, lights, and orbit controls
-3. **Interaction**: Mouse clicks use raycasting to detect selected meshes
-4. **Highlighting**: Selected objects display a subtle red emissive glow
-5. **Layer Navigation**: Clicking highlighted objects moves them away to reveal underlying structures
-6. **Info Display**: Metadata (name, description, wiki links) from each object's custom data is displayed
-7. **Smart Restore**: Clicking moved objects restores them along with any structures that were underneath
+- Loading the model with DRACO decompression
+- Setting up Three.js scene, camera, and lights
+- Raycasting for object selection
+- Reading and displaying mesh metadata
+- Animating objects with Tween.js
 
-### Viewer Code Design
+The code is intentionally straightforward so you can understand how it works and adapt it for your needs. Feel free to fork this and build your own features - cross-sections, measurement tools, VR support, whatever fits your use case.
 
-The `viewer.js` implementation is intentionally kept **minimal and readable** (~280 lines) to serve as:
-- A clean reference implementation for anatomical model interaction
-- A starting point for custom viewers with specialized features
-- An educational example of Three.js best practices for medical/biological visualization
+## Project Structure
 
-Developers can extend this foundation with features like cross-sections, measurement tools, annotation systems, or VR support while maintaining the core interaction pattern.
+```
+body-anatomy-3d-viewer/
+├── public/
+│   ├── index.html          # Main HTML file
+│   ├── style.css           # Styling for UI elements
+│   ├── viewer.js           # Three.js viewer implementation (reference code)
+│   ├── body.glb            # 3D anatomical model (DRACO compressed, 6.9 MB)
+│   ├── libs/               # Bundled Three.js libraries
+│   │   ├── three.module.js        # Three.js core library
+│   │   ├── OrbitControls.js       # Camera controls
+│   │   ├── GLTFLoader.js          # GLTF/GLB loader
+│   │   ├── DRACOLoader.js         # DRACO compression support
+│   │   ├── tween.js               # Animation library
+│   │   └── draco/                 # DRACO decoder files
+│   └── utils/
+│       └── BufferGeometryUtils.js # Utility functions
+├── README.md               # This file
+├── LICENSE                 # CC-BY-SA-4.0 license
+├── CONTRIBUTING.md         # Contribution guidelines
+└── CHANGELOG.md            # Version history
+```
+
+## Technologies Used
+
+- **[Three.js](https://threejs.org/)**: WebGL-based 3D graphics library
+- **[Tween.js](https://github.com/tweenjs/tween.js/)**: JavaScript animation library for smooth transitions
+- **[DRACO](https://google.github.io/draco/)**: 3D geometry compression library by Google
+- **WebGL**: Hardware-accelerated 3D graphics rendering
+
+All libraries are bundled locally in `public/libs/` - no CDN dependencies.
 
 ## Browser Support
 
@@ -154,30 +151,36 @@ Developers can extend this foundation with features like cross-sections, measure
 - Safari
 - Any modern browser with WebGL support
 
-## Performance Considerations
+## Performance
 
-- The included body.glb file is 6.9 MB with DRACO compression
-- Loading time depends on network speed and device performance
-- For larger models, consider additional compression or lazy loading strategies
+The model loads in 1-3 seconds on typical connections. DRACO decompression happens in the browser using WebAssembly, which adds a small initialization delay but significantly reduces download size.
+
+## Using This In Your Project
+
+The easiest way to integrate this into your own project:
+
+1. Copy `body.glb` and the `libs/` directory
+2. Use the initialization code from `viewer.js` as a starting point
+3. Customize the interaction and UI to match your needs
+
+The model works with any Three.js setup - you're not locked into my viewer implementation.
 
 ## Attribution
 
-This project uses anatomical models and data from **[Z-Anatomy](https://www.z-anatomy.com/)**, which is licensed under the [Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0)](http://creativecommons.org/licenses/by-sa/4.0/).
+This project uses anatomical models from **[Z-Anatomy](https://www.z-anatomy.com/)**, licensed under [Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](http://creativecommons.org/licenses/by-sa/4.0/).
 
-In compliance with the CC BY-SA 4.0 license:
-- **Attribution**: Content derived from Z-Anatomy
-- **Source**: https://www.z-anatomy.com/
-- **License**: CC BY-SA 4.0 (http://creativecommons.org/licenses/by-sa/4.0/)
+**Source**: https://www.z-anatomy.com/
+**License**: CC BY-SA 4.0
 
 ## License
 
 This project is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0) - see the [LICENSE](LICENSE) file for details.
 
-This license applies to both the code and the anatomical models used in this project, in compliance with the Z-Anatomy source material's licensing requirements.
+This license applies to both the code and the anatomical model, in compliance with the Z-Anatomy source material's licensing requirements.
 
 ## Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on the process for submitting pull requests.
 
 ## Author
 
@@ -191,6 +194,6 @@ If you encounter any issues or have questions, please file them in the [issue tr
 
 ## Acknowledgments
 
+- Z-Anatomy for providing the comprehensive anatomical dataset
 - Three.js community for excellent documentation and examples
 - DRACO compression by Google for efficient 3D model delivery
-- The open source community for tools and inspiration
