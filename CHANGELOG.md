@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-02-10
+
+### Changed
+
+- **Simplified deployment**: Removed Node.js dependencies (Express.js) in favor of static file serving
+- **Updated installation**: Now uses `npx serve` instead of `npm install` - no dependencies to install
+- **Rewrote README.md**: More personal tone emphasizing `body.glb` as the main reusable asset
+- Added "Why This Exists" section explaining motivation and model creation process
+- Repositioned viewer.js as reference implementation rather than the primary deliverable
+- **Simplified CONTRIBUTING.md**: More welcoming for first-time contributors, removed Node.js setup
+- Updated project structure documentation to reflect static-only architecture
+
+### Removed
+
+- `server.js` - Express server no longer needed
+- `package.json` - No npm dependencies required
+- `package-lock.json` - No dependency management needed
+
+### Fixed
+
+- Corrected license reference in CONTRIBUTING.md (was BSD-3-Clause, now correctly CC-BY-SA-4.0)
+
 ## [1.0.0] - 2026-02-07
 
 ### Added
